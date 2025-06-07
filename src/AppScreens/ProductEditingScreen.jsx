@@ -20,16 +20,16 @@ import TextAtom from '../Atomic Structure/Atoms/TextAtom';
 import ButtonAtom from '../Atomic Structure/Atoms/ButtonAtom';
 import appMngr from '../Managers/AppManager';
 import {useNavigation} from '@react-navigation/native';
-import {useDispatch} from 'react-redux';
-import {setProductsData} from '../redux/Slices/productsDataSlice';
-const ProductAddScreen = () => {
+const ProductEditingScreen = ({route}) => {
+  const item = route.params.item;
   const navigation = useNavigation();
-  const dispatch = useDispatch();
-  const [image, setImage] = useState();
-  const [productName, setProductName] = useState('');
-  const [productPrice, setProductPrice] = useState('');
-  const [productDescription, setProductDescription] = useState('');
-  const [proudctcategory, setProudctcategory] = useState('');
+  const [image, setImage] = useState(item.image);
+  const [productName, setProductName] = useState(item.title);
+  const [productPrice, setProductPrice] = useState(String(item.price));
+  const [productDescription, setProductDescription] = useState(
+    item.description,
+  );
+  const [proudctcategory, setProudctcategory] = useState(item.category);
   const handleUploadImage = () => {
     const options = {
       mediaType: 'photo',
@@ -47,11 +47,11 @@ const ProductAddScreen = () => {
   };
   const isValidForm = () => {
     if (
-      image &&
-      productName &&
-      productPrice &&
-      productDescription &&
-      proudctcategory
+      image !== item.image ||
+      productName !== item.title ||
+      productPrice !== item.price ||
+      productDescription !== item.description ||
+      proudctcategory !== item.category
     ) {
       return true;
     }
@@ -60,18 +60,17 @@ const ProductAddScreen = () => {
     const isValid = isValidForm();
     if (isValid) {
       const data = {
-        id: Math.random(),
+        id: item.id,
         title: productName,
         price: productPrice,
         description: productDescription,
         category: proudctcategory,
         image: image,
       };
-      const response = await appMngr.addProduct(data);
+      const response = await appMngr.editProduct(data);
       console.log('response', response);
       if (response) {
         navigation.navigate('Home');
-        //dispatch(setProductsData(data));
       }
     }
   };
@@ -80,7 +79,7 @@ const ProductAddScreen = () => {
       <ScrollView>
         <KeyboardAvoidingView behavior="position" style={{flex: 1}}>
           <View style={styles.container}>
-            <HeaderAtom showBackButton={true} content={'Add Product'} />
+            <HeaderAtom showBackButton={true} content={'Edit Product'} />
             <TouchableOpacity
               style={styles.imagecontainer}
               onPress={handleUploadImage}>
@@ -164,7 +163,7 @@ const ProductAddScreen = () => {
   );
 };
 
-export default ProductAddScreen;
+export default ProductEditingScreen;
 
 const styles = StyleSheet.create({
   safeContainer: {

@@ -1,5 +1,12 @@
 import React, {useEffect, useState} from 'react';
-import {StyleSheet, Text, View, Image, ScrollView} from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  ScrollView,
+  TouchableWithoutFeedback,
+} from 'react-native';
 import appMngr from '../Managers/AppManager';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import HeaderAtom from '../Atomic Structure/Atoms/HeaderAtom';
@@ -9,14 +16,18 @@ import {
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import TextAtom from '../Atomic Structure/Atoms/TextAtom';
+import LoadingAtom from '../Atomic Structure/Atoms/LoadingAtom';
 const ProductDetial = ({route}) => {
   const navigation = useNavigation();
   const {id} = route.params;
   const [productDetails, setProductDetails] = useState();
+  const [isInLoadingState, setLoadingState] = useState(true);
+
   useEffect(() => {
     const getProductDetail = async () => {
       const response = await appMngr.getProductDetail(id);
       setProductDetails(response);
+      setLoadingState(false);
     };
     getProductDetail();
   }, [id]);
@@ -28,41 +39,70 @@ const ProductDetial = ({route}) => {
   return (
     <SafeAreaView style={styles.SafeAreaView}>
       <ScrollView style={{flex: 1}}>
-        <View style={styles.container}>
-          <HeaderAtom
-            showBackButton={true}
-            content={productDetails?.title}
-            handleBackPress={() => {
-              navigation.goBack();
-            }}
-          />
-          <View style={styles.imagecontainer}>
-            <Image
-              source={{uri: productDetails?.image}}
-              style={styles.productImage}
-              resizeMode="contain"
+        {productDetails ? (
+          <View style={styles.container}>
+            <HeaderAtom
+              showBackButton={true}
+              content={productDetails?.title}
+              handleBackPress={() => {
+                navigation.goBack();
+              }}
             />
+            <View style={styles.imagecontainer}>
+              <Image
+                source={{uri: productDetails?.image}}
+                style={styles.productImage}
+                resizeMode="contain"
+              />
+            </View>
+            {!isInLoadingState && (
+              <View style={styles.infoContainer}>
+                <TextAtom
+                  content={`$ ${productDetails?.price}`}
+                  textstyle={[
+                    styles.text,
+                    {fontSize: wp(7), fontWeight: 'bold'},
+                  ]}
+                />
+                <TextAtom
+                  content={productDetails?.category}
+                  textstyle={[
+                    styles.text,
+                    {fontSize: wp(4), fontWeight: 'bold'},
+                  ]}
+                />
+                <TextAtom
+                  content={`Rating: ${productDetails?.rating.rate}/5`}
+                  textstyle={[
+                    styles.text,
+                    {fontSize: wp(4), fontWeight: 'bold'},
+                  ]}
+                />
+                <TextAtom
+                  content={productDetails?.description}
+                  textstyle={[
+                    styles.text,
+                    {fontSize: wp(3), fontWeight: 'bold'},
+                  ]}
+                />
+              </View>
+            )}
           </View>
-          <View style={styles.infoContainer}>
+        ) : (
+          !isInLoadingState && (
             <TextAtom
-              content={`$ ${productDetails?.price}`}
+              content={'Product Not Found'}
               textstyle={[styles.text, {fontSize: wp(7), fontWeight: 'bold'}]}
             />
-            <TextAtom
-              content={productDetails?.category}
-              textstyle={[styles.text, {fontSize: wp(4), fontWeight: 'bold'}]}
-            />
-            <TextAtom
-              content={`Rating: ${productDetails?.rating.rate}/5`}
-              textstyle={[styles.text, {fontSize: wp(4), fontWeight: 'bold'}]}
-            />
-            <TextAtom
-              content={productDetails?.description}
-              textstyle={[styles.text, {fontSize: wp(3), fontWeight: 'bold'}]}
-            />
-          </View>
-        </View>
+          )
+        )}
       </ScrollView>
+      {isInLoadingState && (
+        <TouchableWithoutFeedback>
+          <View style={styles.overlay} />
+        </TouchableWithoutFeedback>
+      )}
+      {isInLoadingState && <LoadingAtom />}
     </SafeAreaView>
   );
 };
@@ -103,5 +143,13 @@ const styles = StyleSheet.create({
   },
   text: {
     color: '#000',
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
 });

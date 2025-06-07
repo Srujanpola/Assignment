@@ -7,7 +7,7 @@ import {
 } from 'react-native-responsive-screen';
 import ButtonAtom from '../Atoms/ButtonAtom';
 import {TrashIcon} from 'react-native-heroicons/solid';
-const ProductCardButton = ({data, handleDeleteItem, handlePress}) => {
+const ProductCardButton = ({data, handleDeleteItem, handlePress,handleEditProduct}) => {
   useEffect(() => {
     console.log('Data', data.rating);
   }, []);
@@ -45,6 +45,7 @@ const ProductCardButton = ({data, handleDeleteItem, handlePress}) => {
           text={'Edit Product'}
           buttonStyle={{paddingVertical: hp(1)}}
           textcss={{color: '#fff', fontSize: wp(3)}}
+          handlePress={handleEditProduct}
         />
         <TouchableOpacity onPress={handleDeleteItem}>
           <TrashIcon size={hp(3.5)} color={'#E6486F'} />

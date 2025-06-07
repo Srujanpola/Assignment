@@ -40,6 +40,31 @@ class AppManager {
       console.log('product Detail Response', error.message);
     }
   }
+
+  async addProduct(data) {
+    try {
+      const addProduct = await axios.post(baseUrl, data);
+      console.log('addProduct response', addProduct.status);
+      if (addProduct.status === 200) {
+        return true;
+      }
+    } catch (error) {
+      console.log('addProduct Detail Response', error.message);
+    }
+  }
+
+  async editProduct(data) {
+    try {
+      console.log('data', data);
+      const editProduct = await axios.put(`${baseUrl}/${data.id}`, data);
+      console.log('editProduct response', editProduct);
+      if (editProduct.status === 200) {
+        return true;
+      }
+    } catch (error) {
+      console.log('editProduct Detail Response', error.message);
+    }
+  }
 }
 
 const appMngr = new AppManager();

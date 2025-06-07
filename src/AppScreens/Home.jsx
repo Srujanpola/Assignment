@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {use, useCallback, useEffect, useState} from 'react';
 import {
   View,
   SafeAreaView,
@@ -18,11 +18,17 @@ import ProductCardButton from '../Atomic Structure/Molecule/ProductCardButton';
 import ButtonAtom from '../Atomic Structure/Atoms/ButtonAtom';
 import PopUpAtom from '../Atomic Structure/Atoms/PopUpAtom';
 import {useNavigation} from '@react-navigation/native';
+import LoadingAtom from '../Atomic Structure/Atoms/LoadingAtom';
+import {useSelector, useDispatch} from 'react-redux';
+import {setProductsData} from '../redux/Slices/productsDataSlice';
 const HOME = () => {
+  const dipatch = useDispatch();
   const navigation = useNavigation();
+  const productsData = useSelector(state => state.productsData.products);
   const [products, setProducts] = React.useState([]);
   const [showDelteItem, setShowDeleteItem] = useState(false);
   const [deleteItemId, setDeleteItemId] = useState('');
+  const [isInLoadingState, setLoadingState] = useState(true);
   useEffect(() => {
     console.log('products', products);
   }, [products]);
@@ -30,10 +36,16 @@ const HOME = () => {
   const getAllProducts = async () => {
     const products = await appMngr.getAllProducts();
     setProducts(products);
+    setLoadingState(false);
+    dipatch(setProductsData(products));
   };
   useFocusEffect(
     useCallback(() => {
+      // if (!productsData.length) {
       getAllProducts();
+      // } else {
+      //   setLoadingState(false);
+      // }
     }, []),
   );
   const deleteItem = async shouldDelete => {
@@ -45,7 +57,11 @@ const HOME = () => {
       if (reponse) {
         setDeleteItemId('');
         setShowDeleteItem(false);
-        setProducts(products.filter(item => item.id !== deleteItemId));
+        const modiffiedProducts = products.filter(
+          item => item.id !== deleteItemId,
+        );
+        setProducts(modiffiedProducts);
+        dipatch(setProductsData(products));
       }
     }
   };
@@ -55,22 +71,29 @@ const HOME = () => {
       <View style={styles.container}>
         <HeaderAtom content={'Available Products'} />
         <View style={{height: hp(80)}}>
-          <FlatList
-            data={products}
-            keyExtractor={item => item.id}
-            renderItem={({item}) => (
-              <ProductCardButton
-                handlePress={() => {
-                  navigation.navigate('ProductDetialScreen', {id: item.id});
-                }}
-                data={item}
-                handleDeleteItem={() => {
-                  setShowDeleteItem(true);
-                  setDeleteItemId(item.id);
-                }}
-              />
-            )}
-          />
+          {products.length > 0 ? (
+            <FlatList
+              data={products}
+              keyExtractor={item => item.id}
+              renderItem={({item}) => (
+                <ProductCardButton
+                  handlePress={() => {
+                    navigation.navigate('ProductDetialScreen', {id: item.id});
+                  }}
+                  data={item}
+                  handleEditProduct={() =>
+                    navigation.navigate('ProductEditingScreen', {item})
+                  }
+                  handleDeleteItem={() => {
+                    setShowDeleteItem(true);
+                    setDeleteItemId(item.id);
+                  }}
+                />
+              )}
+            />
+          ) : (
+            !isInLoadingState && <TextAtom text={'No Products Found'} />
+          )}
         </View>
         <ButtonAtom
           text={'Add Product'}
@@ -80,7 +103,7 @@ const HOME = () => {
         />
       </View>
       {showDelteItem && <PopUpAtom handleDelteItem={deleteItem} />}
-      {showDelteItem && (
+      {(showDelteItem || isInLoadingState) && (
         <TouchableWithoutFeedback
           onPress={() => {
             setShowDeleteItem(false);
@@ -89,6 +112,7 @@ const HOME = () => {
           <View style={styles.overlay} />
         </TouchableWithoutFeedback>
       )}
+      {isInLoadingState && <LoadingAtom />}
     </SafeAreaView>
   );
 };
